@@ -640,7 +640,7 @@ input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--bl
   <header>
     <div class="hl">
       <span style="font-size:18px">⚡</span>
-      <span class="htitle">Portal de Gestão - Pós Vendas</span>
+      <span class="htitle">Portal de Ocorrêmcias</span>
       <span class="hbadge">DIS</span>
       <span id="ultimaImportacaoTag" style="display:none;
   background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);
@@ -797,10 +797,10 @@ input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:var(--bl
 
 <script>
 const SK='gest_url', CK='gest_cols';
-const SETORES   =['','GARANTIA','DEVOLUÇÃO','OUTROS'];
+const TRANSPORTADORAS   =['','GFW','RODONAVES','TECMAR','NR EXPRESS','TG TRANSP'];
 const FABRICANTES=['','LG','GREE','MIDEA','TCL','SAMSUNG','TRANE','DAIKIN','AGRATTO'];
 const URGENCIAS =['','ALTA','MÉDIA','BAIXA'];
-const EDIT_KEYS =['SETOR','FABRICANTE','NIVEL_URGENCIA'];
+const EDIT_KEYS =['TRANSPORTADORA','FABRICANTE','NIVEL_URGENCIA'];
 const FIXED_COLS=['PEDIDO'];
 const SETOR_C={
   'GARANTIA':{bg:'rgba(168,85,247,.15)',c:'#d8b4fe',b:'rgba(168,85,247,.4)'},
@@ -871,7 +871,7 @@ async function saveRows(pedidos){
     const item={...orig};
 
     // Sobrescreve com edições locais (SETOR, FABRICANTE, NIVEL_URGENCIA)
-    item.SETOR          = e.hasOwnProperty('SETOR')          ? e.SETOR          : (orig.SETOR||'');
+    item.TRANSPORTADORA          = e.hasOwnProperty('TRANSPORTADORA')          ? e.TRANSPORTADORA          : (orig.TRANSPORTADORA||'');
     item.FABRICANTE     = e.hasOwnProperty('FABRICANTE')      ? e.FABRICANTE     : (orig.FABRICANTE||'');
     item.NIVEL_URGENCIA = e.hasOwnProperty('NIVEL_URGENCIA')  ? e.NIVEL_URGENCIA : (orig.NIVEL_URGENCIA||'');
 
@@ -944,7 +944,7 @@ function getFiltered(){
       if(!sel||sel.size===0)continue;
       const edit=localEdits[r._PEDIDO]||{};
       let val;
-      if(key==='SETOR')        val=edit.SETOR!==undefined?edit.SETOR:(r.SETOR||'');
+      if(key==='TRANSPORTADORA')        val=edit.TRANSPORTADORA!==undefined?edit.TRANSPORTADORA:(r.TRANSPORTADORA||'');
       else if(key==='FABRICANTE') val=edit.FABRICANTE!==undefined?edit.FABRICANTE:(r.FABRICANTE||'');
       else if(key==='NIVEL_URGENCIA') val=edit.NIVEL_URGENCIA!==undefined?edit.NIVEL_URGENCIA:(r.NIVEL_URGENCIA||'');
       else val=String(r[key]??'');
@@ -1008,7 +1008,7 @@ function openColDropdown(th,colKey,event){
   rows.forEach(r=>{
     const edit=localEdits[r._PEDIDO]||{};
     let val;
-    if(colKey==='SETOR')val=edit.SETOR!==undefined?edit.SETOR:(r.SETOR||'');
+    if(colKey==='TRANSPORTADORA')val=edit.TRANSPORTADORA!==undefined?edit.TRANSPORTADORA:(r.TRANSPORTADORA||'');
     else if(colKey==='FABRICANTE')val=edit.FABRICANTE!==undefined?edit.FABRICANTE:(r.FABRICANTE||'');
     else if(colKey==='NIVEL_URGENCIA')val=edit.NIVEL_URGENCIA!==undefined?edit.NIVEL_URGENCIA:(r.NIVEL_URGENCIA||'');
     else val=String(r[colKey]??'');
@@ -1152,7 +1152,7 @@ function renderTable(){
     const pid=r._PEDIDO;
     const isSel=selected.has(pid);
     const edit=localEdits[pid]||{};
-    const setor=edit.SETOR!==undefined?edit.SETOR:(r.SETOR||'');
+    const setor=edit.TRANSPORTADORA!==undefined?edit.TRANSPORTADORA:(r.TRANSPORTADORA||'');
     const fab=edit.FABRICANTE!==undefined?edit.FABRICANTE:(r.FABRICANTE||'');
     const urg=edit.NIVEL_URGENCIA!==undefined?edit.NIVEL_URGENCIA:(r.NIVEL_URGENCIA||'');
     const pidE=CSS.escape(pid);
@@ -1176,8 +1176,8 @@ function renderTable(){
     });
 
     // SETOR
-    html+=`<td class="edit-td"><select class="esel ${setor?'f-'+setor:''}" id="SETOR_${pidE}" onchange="setEdit('${pid.replace(/'/g,"\\'")}','SETOR',this.value)">
-      ${SETORES.map(s=>`<option value="${s}" ${setor===s?'selected':''}>${s||'— Setor —'}</option>`).join('')}
+    html+=`<td class="edit-td"><select class="esel ${transportadora?'f-'+transportadora:''}" id="TRANSPORTADORA_${pidE}" onchange="setEdit('${pid.replace(/'/g,"\\'")}','SETOR',this.value)">
+      ${TRANSPORTADORES.map(s=>`<option value="${s}" ${transportadora===s?'selected':''}>${s||'— Setor —'}</option>`).join('')}
     </select></td>`;
 
     // FABRICANTE
@@ -1386,22 +1386,24 @@ function renderBanco(){
   };
 
   // Totais por campo
-  const setores    = cnt(data.map(r=>getField(r,'SETOR')));
+  const setores    = cnt(data.map(r=>getField(r,'TRANSPORTADORA')));
   const fabricantes= cnt(data.map(r=>getField(r,'FABRICANTE')));
   const urgencias  = cnt(data.map(r=>getField(r,'NIVEL_URGENCIA')));
-  const comSetor   = data.filter(r=>getField(r,'SETOR')).length;
+  const comSetor   = data.filter(r=>getField(r,'TRANSPORTADORA')).length;
   const comFab     = data.filter(r=>getField(r,'FABRICANTE')).length;
   const alta       = data.filter(r=>getField(r,'NIVEL_URGENCIA')==='ALTA').length;
   const media      = data.filter(r=>getField(r,'NIVEL_URGENCIA')==='MÉDIA').length;
   const baixa      = data.filter(r=>getField(r,'NIVEL_URGENCIA')==='BAIXA').length;
-  const garantia   = data.filter(r=>getField(r,'SETOR')==='GARANTIA').length;
-  const devolucao  = data.filter(r=>getField(r,'SETOR')==='DEVOLUÇÃO').length;
-  const outros     = data.filter(r=>getField(r,'SETOR')==='OUTROS').length;
+  const GFW   = data.filter(r=>getField(r,'TRANSPORTADORA')==='GFW').length;
+  const RODONAVES = data.filter(r=>getField(r,'TRANSPORTADORA')==='RODONAVES').length;
+  const TECMAR     = data.filter(r=>getField(r,'TRANSPORTADORA')==='TECMAR').length;
+  const TG     = data.filter(r=>getField(r,'TRANSPORTADORA')==='TG TRANSP').length;
+  const NR     = data.filter(r=>getField(r,'TRANSPORTADORA')==='NR EXPRESS').length;
 
   // ── Métricas topo ──
   document.getElementById('bMetrics').innerHTML = [
     {i:'🗄️',l:'Total Histórico',v:total,       a:'#3b82f6'},
-    {i:'🏷️',l:'Classificados',  v:comSetor,    a:'#a855f7'},
+    {i:'🏷️',l:'Classificados',  v:comTransportadora,    a:'#a855f7'},
     {i:'🏭',l:'Com Fabricante',  v:comFab,      a:'#ec4899'},
     {i:'🔴',l:'Urgência ALTA',   v:alta,        a:'#ef4444'},
     {i:'🟡',l:'Urgência MÉDIA',  v:media,       a:'#f59e0b'},
@@ -1463,12 +1465,15 @@ function renderBanco(){
   // ── Gráficos por setor / fabricante / urgência ──
   document.getElementById('bCharts').innerHTML = `
     <div class="cc">
-      <div class="ct">🏷️ Ranking por Setor</div>
+      <div class="ct">🏷️ Ranking por Transportadora</div>
       <div style="margin-bottom:12px">
         ${[
-          ['GARANTIA',garantia,'rgba(168,85,247,.8)'],
-          ['DEVOLUÇÃO',devolucao,'rgba(245,158,11,.8)'],
-          ['OUTROS',outros,'rgba(100,116,139,.8)'],
+          ['GFW',gfw,'rgba(168,85,247,.8)'],
+          ['RODONAVES',rodonaves,'rgba(245,158,11,.8)'],
+          ['TECMAR',tecmar,'rgba(100,116,139,.8)'],
+          ['TG TRANSP',tgtransp,'rgba(168,85,247,.8)'],
+          ['NR EXPRESS',nrexpress,'rgba(245,158,11,.8)'],
+        
         ].map(([l,v,c],i)=>`
           <div class="rank-row">
             <span class="rank-pos">${i+1}</span>

@@ -802,10 +802,12 @@ const FABRICANTES=['','LG','GREE','MIDEA','TCL','SAMSUNG','TRANE','DAIKIN','AGRA
 const URGENCIAS =['','ALTA','MÉDIA','BAIXA'];
 const EDIT_KEYS =['TRANSPORTADORA','FABRICANTE','NIVEL_URGENCIA'];
 const FIXED_COLS=['PEDIDO'];
-const SETOR_C={
-  'GARANTIA':{bg:'rgba(168,85,247,.15)',c:'#d8b4fe',b:'rgba(168,85,247,.4)'},
-  'DEVOLUÇÃO':{bg:'rgba(245,158,11,.15)',c:'#fcd34d',b:'rgba(245,158,11,.4)'},
-  'OUTROS':  {bg:'rgba(100,116,139,.15)',c:'#94a3b8',b:'rgba(100,116,139,.3)'},
+const TRANSPORTADORA_C={
+  'GFW':{bg:'rgba(168,85,247,.15)',c:'#d8b4fe',b:'rgba(168,85,247,.4)'},
+  'RODONAVES':{bg:'rgba(245,158,11,.15)',c:'#fcd34d',b:'rgba(245,158,11,.4)'},
+  'TECMAR':  {bg:'rgba(100,116,139,.15)',c:'#94a3b8',b:'rgba(100,116,139,.3)'},
+  'TG TRANSP':  {bg:'rgba(100,116,139,.15)',c:'#94a3b8',b:'rgba(100,116,139,.3)'},
+  'NR EXPRESS':  {bg:'rgba(100,116,139,.15)',c:'#94a3b8',b:'rgba(100,116,139,.3)'},
 };
 const URG_C={
   'ALTA': {bg:'rgba(239,68,68,.15)',c:'#fca5a5',b:'rgba(239,68,68,.4)'},
@@ -1130,7 +1132,7 @@ function renderTable(){
   });
 
   // Colunas editáveis fixas
-  ['SETOR','FABRICANTE','URGÊNCIA'].forEach(h=>{
+  ['TRANSPORTADORA','FABRICANTE','URGÊNCIA'].forEach(h=>{
     const key=h==='URGÊNCIA'?'NIVEL_URGENCIA':h;
     const hasF=colFilters[key]&&colFilters[key].size>0;
     html+=`<th class="${hasF?'has-filter':''}" style="background:var(--surface3)">
@@ -1152,7 +1154,7 @@ function renderTable(){
     const pid=r._PEDIDO;
     const isSel=selected.has(pid);
     const edit=localEdits[pid]||{};
-    const setor=edit.TRANSPORTADORA!==undefined?edit.TRANSPORTADORA:(r.TRANSPORTADORA||'');
+    const transportadora=edit.TRANSPORTADORA!==undefined?edit.TRANSPORTADORA:(r.TRANSPORTADORA||'');
     const fab=edit.FABRICANTE!==undefined?edit.FABRICANTE:(r.FABRICANTE||'');
     const urg=edit.NIVEL_URGENCIA!==undefined?edit.NIVEL_URGENCIA:(r.NIVEL_URGENCIA||'');
     const pidE=CSS.escape(pid);
@@ -1176,8 +1178,8 @@ function renderTable(){
     });
 
     // SETOR
-    html+=`<td class="edit-td"><select class="esel ${transportadora?'f-'+transportadora:''}" id="TRANSPORTADORA_${pidE}" onchange="setEdit('${pid.replace(/'/g,"\\'")}','SETOR',this.value)">
-      ${TRANSPORTADORES.map(s=>`<option value="${s}" ${transportadora===s?'selected':''}>${s||'— Setor —'}</option>`).join('')}
+    html+=`<td class="edit-td"><select class="esel ${transportadora?'f-'+transportadora:''}" id="TRANSPORTADORA_${pidE}" onchange="setEdit('${pid.replace(/'/g,"\\'")}','TRANSPORTADORA',this.value)">
+      ${TRANSPORTADORES.map(s=>`<option value="${s}" ${transportadora===s?'selected':''}>${s||'— Transportadora —'}</option>`).join('')}
     </select></td>`;
 
     // FABRICANTE
@@ -1386,10 +1388,10 @@ function renderBanco(){
   };
 
   // Totais por campo
-  const setores    = cnt(data.map(r=>getField(r,'TRANSPORTADORA')));
+  const transportadores    = cnt(data.map(r=>getField(r,'TRANSPORTADORA')));
   const fabricantes= cnt(data.map(r=>getField(r,'FABRICANTE')));
   const urgencias  = cnt(data.map(r=>getField(r,'NIVEL_URGENCIA')));
-  const comSetor   = data.filter(r=>getField(r,'TRANSPORTADORA')).length;
+  const comTransportador   = data.filter(r=>getField(r,'TRANSPORTADORA')).length;
   const comFab     = data.filter(r=>getField(r,'FABRICANTE')).length;
   const alta       = data.filter(r=>getField(r,'NIVEL_URGENCIA')==='ALTA').length;
   const media      = data.filter(r=>getField(r,'NIVEL_URGENCIA')==='MÉDIA').length;
@@ -1531,10 +1533,12 @@ function renderBanco(){
   document.getElementById('bTotal').textContent = `${total} registros históricos`;
   const ultimos = [...data].reverse().slice(0,30);
 
-  const SETOR_BADGE = {
-    'GARANTIA': 'background:rgba(168,85,247,.2);color:#d8b4fe',
-    'DEVOLUÇÃO':'background:rgba(245,158,11,.2);color:#fcd34d',
-    'OUTROS':   'background:rgba(100,116,139,.2);color:#94a3b8',
+  const TRANSPORTADORA_BADGE = {
+    'GFW': 'background:rgba(168,85,247,.2);color:#d8b4fe',
+    'RODONAVES':'background:rgba(245,158,11,.2);color:#fcd34d',
+    'TECMAR':   'background:rgba(100,116,139,.2);color:#94a3b8',
+    'TG TRANSP':   'background:rgba(100,116,139,.2);color:#94a3b8',
+    'NR EXPRESS':   'background:rgba(100,116,139,.2);color:#94a3b8',
   };
   const URG_BADGE = {
     'ALTA': 'background:rgba(239,68,68,.2);color:#fca5a5',
@@ -1545,7 +1549,7 @@ function renderBanco(){
   // Identifica colunas disponíveis na Aba 2
   const bHeaders = Object.keys(ultimos[0]||{}).filter(h=>h!=='OK'&&h!=='SALVO_EM');
   // Mostra: PEDIDO, DATA, CLIENTE, SETOR, FABRICANTE, NIVEL_URGENCIA, SALVO_EM
-  const showCols = ['PEDIDO','DATA','DATA / Ultima atualização','DATA/HORA','CLIENTE','SETOR','FABRICANTE','NIVEL_URGENCIA','SALVO_EM']
+  const showCols = ['PEDIDO','DATA','DATA / Ultima atualização','DATA/HORA','CLIENTE','TRANSPORTADORA','FABRICANTE','NIVEL_URGENCIA','SALVO_EM']
     .filter(c=>bHeaders.some(h=>h.toUpperCase()===c.toUpperCase()||h===c));
   // fallback: usa todos se não encontrou
   const finalCols = showCols.length>0 ? showCols : bHeaders.slice(0,8);
@@ -1556,8 +1560,8 @@ function renderBanco(){
       <tbody>${ultimos.map(r=>`<tr>${finalCols.map(h=>{
         const rawH = bHeaders.find(bh=>bh===h||bh.toUpperCase()===h.toUpperCase())||h;
         const val  = String(r[rawH]||'—');
-        if(h==='SETOR'||h==='setor'){
-          const st=SETOR_BADGE[val]||'';
+        if(h==='TRANSPORTADORA'||h==='transportadora'){
+          const st=TRANSPORTADORA_BADGE[val]||'';
           return`<td><span class="b-badge" style="${st}">${val}</span></td>`;
         }
         if(h==='NIVEL_URGENCIA'){
@@ -1580,22 +1584,22 @@ function switchTab(name,el){
 // ── DASHBOARD ─────────────────────────────────────────────────
 function renderDash(){
   const total=rows.length;
-  const comSetor=rows.filter(r=>(localEdits[r._PEDIDO]?.SETOR||r.SETOR)).length;
+  const comTransportadora=rows.filter(r=>(localEdits[r._PEDIDO]?.TRANSPORTADORA||r.TRANSPORTADORA)).length;
   const alta=rows.filter(r=>(localEdits[r._PEDIDO]?.NIVEL_URGENCIA||r.NIVEL_URGENCIA)==='ALTA').length;
   const comFab=rows.filter(r=>(localEdits[r._PEDIDO]?.FABRICANTE||r.FABRICANTE)).length;
 
   document.getElementById('mRow').innerHTML=[
     {i:'📁',l:'Total',v:total,a:'#3b82f6'},
-    {i:'🏷',l:'C/ Setor',v:comSetor,a:'#a855f7'},
+    {i:'🏷',l:'C/ Transportadora',v:comTransportadora,a:'#a855f7'},
     {i:'🏭',l:'C/ Fabricante',v:comFab,a:'#ec4899'},
     {i:'🔴',l:'Alta Urgência',v:alta,a:'#ef4444'},
-    {i:'⚡',l:'Pendentes',v:total-comSetor,a:'#f59e0b'},
+    {i:'⚡',l:'Pendentes',v:total-comTransportadora,a:'#f59e0b'},
   ].map(m=>`<div class="mc" style="--acc:${m.a}">
     <div class="mi">${m.i}</div><div class="mv">${m.v}</div>
     <div class="ml">${m.l}</div></div>`).join('');
 
   const cnt=arr=>{const c={};arr.forEach(v=>{if(v)c[v]=(c[v]||0)+1;});return Object.entries(c).sort((a,b)=>b[1]-a[1]);};
-  const setorC=cnt(rows.map(r=>localEdits[r._PEDIDO]?.SETOR||r.SETOR||''));
+  const transportadoraC=cnt(rows.map(r=>localEdits[r._PEDIDO]?.TRANSPORTADORA||r.TRANSPORTADORA||''));
   const fabC=cnt(rows.map(r=>localEdits[r._PEDIDO]?.FABRICANTE||r.FABRICANTE||''));
   const urgC=cnt(rows.map(r=>localEdits[r._PEDIDO]?.NIVEL_URGENCIA||r.NIVEL_URGENCIA||''));
 
@@ -1621,18 +1625,18 @@ function renderDash(){
   };
 
   document.getElementById('cRow').innerHTML=`
-    <div class="cc"><div class="ct">Por Setor</div>${pbars(setorC,SETOR_C)}</div>
+    <div class="cc"><div class="ct">Por Transportadora</div>${pbars(transportadoraC,TRANSPORTADORA_C)}</div>
     <div class="cc"><div class="ct">Por Fabricante</div>${mbars(fabC,'#3b82f6')}</div>
     <div class="cc"><div class="ct">Por Urgência</div>${pbars(urgC,URG_C)}</div>`;
 
-  const pct=total>0?Math.round((comSetor/total)*100):0;
+  const pct=total>0?Math.round((comTransportadora/total)*100):0;
   document.getElementById('okBar').innerHTML=`
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:13px;font-weight:700">Registros com Setor definido</span>
+      <span style="font-size:13px;font-weight:700">Registros com Transportadora definido</span>
       <span style="font-size:17px;font-weight:800;color:#22c55e">${pct}%</span>
     </div>
     <div class="okt"><div class="okf" style="width:${pct}%"></div></div>
-    <div class="okm"><span>${comSetor} classificados</span><span>${total-comSetor} pendentes</span></div>`;
+    <div class="okm"><span>${comTransportadora} classificados</span><span>${total-comtransportadora} pendentes</span></div>`;
 }
 
 // ── EXPORTAR EXCEL ────────────────────────────────────────────
@@ -1643,14 +1647,14 @@ function exportExcel(){
   const dkey=getDateKey();
   const allDisp=headers.filter(h=>!EDIT_KEYS.includes(h)&&h!=='_PEDIDO');
   const dispH=visibleCols?allDisp.filter(h=>visibleCols.includes(h)):allDisp;
-  const allCols=[...dispH,'SETOR','FABRICANTE','NIVEL_URGENCIA'];
+  const allCols=[...dispH,'TRANSPORTADORA','FABRICANTE','NIVEL_URGENCIA'];
 
   // Monta XML Excel (formato SpreadsheetML — abre direto no Excel)
   const xmlRows=filtered.map(r=>{
     const edit=localEdits[r._PEDIDO]||{};
     return`<Row>${allCols.map(h=>{
       let val;
-      if(h==='SETOR')        val=edit.SETOR!==undefined?edit.SETOR:(r.SETOR||'');
+      if(h==='TRANSPORTADORA')        val=edit.TRANSPORTADORA!==undefined?edit.TRANSPORTADORA:(r.TRANSPORTADORA||'');
       else if(h==='FABRICANTE')val=edit.FABRICANTE!==undefined?edit.FABRICANTE:(r.FABRICANTE||'');
       else if(h==='NIVEL_URGENCIA')val=edit.NIVEL_URGENCIA!==undefined?edit.NIVEL_URGENCIA:(r.NIVEL_URGENCIA||'');
       else val=dkey&&h===dkey?fmtDate(r[h]):(r[h]??'');

@@ -658,6 +658,11 @@ input[type=checkbox]{width:15px;height:15px;cursor:pointer;accent-color:#f97316}
     📂 Importar CSV
   </button>
 
+  <button class="hb" id="btnRastreioRodo" onclick="atualizarRastreioBtn()"
+    style="border-color:rgba(249,115,22,.3);color:#fdba74;background:rgba(249,115,22,.08)">
+    🚛 Atualizar Rastreio
+  </button>
+
   <button class="hb" onclick="fetchData()"><span id="ri">↻</span> Atualizar</button>
   <button class="hb red" onclick="desconectar()">Desconectar</button>
 </div>
@@ -1888,6 +1893,29 @@ function csvOptChange(){
     else{lbl.style.borderColor='var(--border)';lbl.style.background='var(--surface2)';}
   });
 }
+async function atualizarRastreioBtn(){
+  const btn=document.getElementById('btnRastreioRodo');
+  const originalText=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spin" style="display:inline-block">↻</span> Atualizando...';
+  try{
+    const r=await fetch(url,{method:'POST',body:JSON.stringify({action:'atualizarRastreio'})});
+    const j=await r.json();
+    if(!j.success) throw new Error(j.error||'Erro ao atualizar rastreio');
+    if(j.continuando){
+      toast(`🚛 ${j.processados} NF(s) processada(s) — continuando em segundo plano...`);
+    } else {
+      toast(`🚛 Rastreio atualizado! ${j.processados} NF(s) processada(s).`);
+    }
+    fetchData();
+  }catch(e){
+    showErr('Erro ao atualizar rastreio: '+e.message);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML=originalText;
+  }
+}
+
 async function importarCSV(){
   if(!csvDados) return;
   const modo=document.querySelector('input[name="csvOpt"]:checked').value;

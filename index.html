@@ -937,7 +937,9 @@ function fmtDate(val){
   return`${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 function toDateStr(val){const d=parseDate(val);if(!d)return'';return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function isWrapCol(h){return/OCORREN|DESCRI|OBS|ATUALI|TEXTO|NOTA|MSG|HIST|COMENT/.test(h.toUpperCase());}
+function isWrapCol(h){return/OCORREN|DESCRI|OBS|ATUALI|TEXTO|NOTA|MSG|HIST|COMENT|STATUS RASTREIO/.test(h.toUpperCase());}
+function isRodonavesCol(h){return/^(STATUS RASTREIO|ÚLTIMA ATUALIZAÇÃO|PREVISÃO ENTREGA)$/i.test(h.trim());}
+function isEntregueTexto(v){const s=String(v||'').toLowerCase();return s.includes('entrega finalizada')||s.includes('entregue')||s.includes('delivered');}
 
 // ── FILTRO GLOBAL + COLUNA ─────────────────────────────────────
 function getFiltered(){
@@ -1124,12 +1126,13 @@ function renderTable(){
     const hasF=colFilters[h]&&colFilters[h].size>0&&colFilters[h].size<(new Set(rows.map(r=>String(r[h]??''))).size);
     const isSorted=sortColKey===h;
     const labelCls=isSorted?(sortColDir==='asc'?'th-label sorted-asc':'th-label sorted-desc'):'th-label';
-    html+=`<th class="${hasF?'has-filter':''}" id="th-${CSS.escape(h)}">
+    const isRodo=isRodonavesCol(h);
+    html+=`<th class="${hasF?'has-filter':''}" id="th-${CSS.escape(h)}" ${isRodo?'style="background:#f97316"':''}>
       <div class="th-inner">
-        <span class="${labelCls}">${h}</span>
+        <span class="${labelCls}" ${isRodo?'style="color:#ffffff;font-weight:700"':''}>${isRodo?'🚛 ':''}${h}</span>
         <button class="col-filter-btn ${hasF||isSorted?'active':''}"
           onclick="openColDropdown(this.closest('th'),'${h.replace(/'/g,"\\'")}',event)"
-          title="Filtrar ${h}">▾</button>
+          title="Filtrar ${h}" ${isRodo?'style="color:#ffffff"':''}>▾</button>
       </div>
     </th>`;
   });
@@ -1171,7 +1174,15 @@ function renderTable(){
       const isWrap=isWrapCol(h);
       const disp=isDate?fmtDate(raw):(raw===''||raw===null?'—':raw);
       const title=String(raw).replace(/"/g,'&quot;');
-      if(isDate){
+
+      // Verifica se essa linha está com entrega finalizada (olha a coluna Status Rastreio)
+      const statusRastreio=r['Status Rastreio']??r['STATUS RASTREIO']??'';
+      const entregue=isEntregueTexto(statusRastreio);
+      const isUltimaAtualizacaoRodo=/^ÚLTIMA ATUALIZAÇÃO$/i.test(h.trim());
+
+      if(isUltimaAtualizacaoRodo && entregue){
+        html+=`<td title="${title}" style="background:rgba(34,197,94,.18);color:#4ade80;font-weight:700;white-space:nowrap">${disp}</td>`;
+      } else if(isDate){
         html+=`<td title="${title}" style="font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap;color:#fdba74;min-width:120px">${disp}</td>`;
       } else if(isWrap){
         html+=`<td class="wrap-col" title="${title}">${disp}</td>`;
